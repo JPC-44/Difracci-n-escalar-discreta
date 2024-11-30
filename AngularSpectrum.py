@@ -4,21 +4,20 @@ import matplotlib.pyplot as plt
 
 z=10E-2                 # Distancia entre planos
 lamb=650E-9             # Longitud de onda que se propaga
-N=1024                  # Muestras      NOTA: tomar muestras proporcionales a C, para que el pixel se tome bien en la matriz C=1/deltax
-#C=100                  # Espacio de las frecuencias va desde [0,C] cuando no está centrada
+N=1024                  # Muestras 
 deltax=10E-6            # Paso en x
 deltay=deltax           # Paso en y
 deltafx=1/(N*deltax)    # Paso fx
 deltafy=deltafx         # Paso fy
 R=0.2E-3                # Radio de la apertura circular
 b=0.08E-3               # Ancho de la apertura de Young
-a=0*R                   #SI
+a=0*R                   # Desplazamiento de la máscara circular
 
 # Función circular desplazada un valor 'a' en el plano, con radio R
 def U01(x, y):           
     return np.where((np.sqrt((x-a)**2+(y-a)**2) < R) , 1, 0)       
 
-# Apertura rectangular deltada con ancho 2b
+# Apertura rectangular deltada con ancho 2b (YOUNG)
 def U0(x, y):              
     return np.where(((np.abs(x)<b) & (np.abs(0.001*y)<b)),1, 0)
 

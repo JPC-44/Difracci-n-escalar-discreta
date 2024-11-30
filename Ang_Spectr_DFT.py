@@ -2,56 +2,62 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-z=2E-2    #distancia entre planos
-lamb=650E-9                            #longitud de onda que se propaga
-M=1024
-N=1024       #  Muestras      NOTA: tomar muestras proporcionales a C, para que el pixel se tome bien en la matriz C=1/deltax
-#C=100                      # espacio de las frecuencias va desde [0,C] cuando no está centrada
-deltax=10E-6                         #paso en espacio
-deltay=deltax           #paso en y
-deltafx=1/(N*deltax)    #paso frecuencial en x
-deltafy=deltafx         #paso frecuencial en y
-R=0.2E-3        #Radio de la apertura circular
-a=0*R           #SI
+z=10E-2                 # Distancia entre planos
+lamb=650E-9             # Longitud de onda que se propaga
+N=1024                  # Muestras en x
+M=N                     #m Muestas en y
+deltax=10E-6            # Paso en x
+deltay=deltax           # Paso en y
+deltafx=1/(N*deltax)    # Paso fx
+deltafy=deltafx         # Paso fy
+R=0.2E-3                # Radio de la apertura circular
+b=0.08E-3               # Ancho de la apertura de Young
+a=0*R                   # Desplazamiento de la máscara circular
 
 
 
 
- # implementación de la DFT a mano
+# Función DFT bidimensional
 def dft2d(image):
-
-    #M, N = image.shape # tamaño de la imagne a la que se le implementa la DFT
-
-    dft_result = np.zeros((M, N), dtype=complex)          # creación de array en ceros de tipo complejo para la DFT
+    # Creación de array en ceros de tipo complejo para la DFT.
+    dft2D = np.zeros((M, N), dtype=complex)         
     
-    x1 = np.arange(M)       # falta darle dimensiones a la vuelta
-    y1 = np.arange(N)       # 
-    
-    Wx = np.exp(-2j * np.pi * np.outer(x1, x1) / M)        #base  en x 
-    Wy = np.exp(-2j * np.pi * np.outer(y1, y1) / N)         # base en y  
-   
-    temp = np.dot(Wx, image)
-    dft_result = np.dot(temp, Wy)
+    x1 = np.arange(M)       # Listas del 0,...,1023
+    y1 = np.arange(N)        
 
-    return dft_result
-
-def inverse_dft2d(image):
-
-    #M, N = image.shape # tamaño de la imagne a la que se le implementa la DFT
-    dft_result = np.zeros((M, N), dtype=complex)          # creación de array en ceros de tipo complejo para la DFT
+    # Matrices con la base o kernel de Fourier
+    Kernel_x = np.exp(-2j * np.pi * np.outer(x1, x1) / M) #base  en x 
+    Kernel_y = np.exp(-2j * np.pi * np.outer(y1, y1) / N) # base en y  
     
-    x1 = np.arange(M)       # falta darle dimensiones a la vuelta
-    y1 = np.arange(N)       # 
-    
-    Wx = np.exp(2j * np.pi * np.outer(x1, x1) / M)        #base  en x 
-    Wy = np.exp(2j * np.pi * np.outer(y1, y1) / N)         # base en y  
-   
-    temp = np.dot(Wx, image)
-    dft_result = np.dot(temp, Wy)
-    
-    return deltafx**2*deltax**2*dft_result
+    # aplicación de transformada unidimensional
+    dft_x = np.dot(Kernel_x, image)
+    # aplicación de transfomada bidimensional
+    dft2D = np.dot(dft_x, Kernel_y)
 
-def shift(arr):                                  #shift de la DFT
+    return dft2D
+
+# Función que realiza transformada de Fourier inversa
+def inverse_dft2d(image):    # el input debe estar unshifted
+
+
+    dft2D = np.zeros((M, N), dtype=complex)         
+    
+    x1 = np.arange(M)       # Listas del 0,...,1023
+    y1 = np.arange(N)        
+
+    # Matrices con la base o kernel conjugado de Fourier
+    Kernel_x = np.exp(2j * np.pi * np.outer(x1, x1) / M) #base  en x 
+    Kernel_y = np.exp(2j * np.pi * np.outer(y1, y1) / N) # base en y  
+    
+    # aplicación de transformada unidimensional
+    dft_x = np.dot(Kernel_x, image)
+    # aplicación de transfomada bidimensional
+    dft2D = np.dot(dft_x, Kernel_y)
+    
+    return deltafx**2*deltax**2*dft2D
+
+#Función shift de la DFT Unidimensional
+def shift(arr):      
     N = len(arr)
     mid = N // 2   #división que toma el valor por debajo // 
     if N % 2 == 0:   #   residuo %
@@ -59,14 +65,15 @@ def shift(arr):                                  #shift de la DFT
     else:
         return np.concatenate((arr[mid+1:], arr[:mid+1]))
 
+#Función shift bidimensional de la DFT2D
 def shift2D(A):
-    Q=len(A)//2             
+           
     N=len(A)
     S=[]
     for p in range(0,N):
         S.append(shift(A[p]))
     for p in range(N-1,-1,-1):
-        SS=shift(S)         #salen las frecuencias desfasadas
+        SS=shift(S)                #salen las frecuencias desfasadas
     SI=[]                          #shift sin el desfase para que cuadren las frecuencia
     for p in range(0,N):
         B=[]
@@ -75,48 +82,59 @@ def shift2D(A):
         SI.append(B)
     return SI
 
-# Implemenación de la DFT a mano
+# Función circular desplazada un valor 'a' en el plano, con radio R
+def U01(x, y):      
+    return np.where(( np.sqrt((x-a)**2+(y-a)**2) < R) ,1, 0)       
+# Apertura rectangular deltada con ancho 2b (YOUNG)
+def U0(x, y):        
+    return np.where((( np.abs(x) < b ) & ( np.abs(0.001*y) < b )), 1, 0) 
 
-def U01(x, y):               #FUNCIÓN CIRC Mascara
-    return np.where((np.sqrt((x-a)**2+(y-a)**2) < R) , 1, 0)       
+# Apertura cuadrada de lado 2R
+def U02(x, y):        
+    return np.where((( np.abs(x)< R ) & ( np.abs(y) < R )), 1, 0) 
 
-def U02(x, y):              #YOUNG
-    return np.where(((np.abs(x)<R) & (np.abs(0.01*y)<R)),1, 0) 
-
-def U0(x, y):              #rect
-    return np.where(((np.abs(x)<R) & (np.abs(y)<R)),1, 0) 
-
-
+# Función circ para filtrado de las frecuencias no propagantes de H(fx,fy)
 def circ(X,Y):
     distancia = np.sqrt(X**2 + Y**2)
     circulo = np.where(distancia <= 1, 1, 0)
     return circulo
 
-def H(fx,fy):                      #función transferencia del espacio libre
+# Función transferencia del espacio libre
+def H(fx,fy):              
       return (np.exp((1j*2*np.pi*z/lamb)*np.sqrt(1-((lamb)**2)*(fx**2+fy**2))))*circ(lamb*fx,lamb*fy)
 
+
+# Función main donde se ejecuta en meshgrid y las operaciones para propagar espectro angular
 def main():
+    #LINSPACE EN ESPACIO 
     x=np.arange(-N//2,N//2)
     y=np.arange(-N//2,N//2)
     x,y=x*deltax,y*deltax
     X,Y=np.meshgrid(x,y)
 
+    #LINSPACE EN ESPACIO DE FRECUENCIAS
     fx=np.arange(-N//2,N//2)
-    fy=np.arange(-N//2,N//2)        #LINSPACE EN ESPACIO DE FRECUENCIAS
+    fy=np.arange(-N//2,N//2)        
     fx,fy=fx*deltafx,fy*deltafx
     Fx,Fy=np.meshgrid(fx,fy)
-    Z0=U0(X,Y)  #Masacara de un ciruculo         #tener en cuenta ifft recibe matrices de espacio descentrada
 
-    H0=H(Fx,Fy)  #Funcion de transferencia      #TENER EN CUENTA QUE LA fft recibe matrices con frecuencia descentrada
-    A0=np.fft.fftshift(dft2d(Z0))    #Calculamos la transformada de fourier de Ao      
+    # Función máscara evaluada en el meshgrid
+    Z0=U0(X,Y) 
+    #Funcion de transferencia evaluada en el meshgrid
+    H0=H(Fx,Fy)
+    A0_unshifted=dft2d(Z0)                          # Espectro angular en z=0 descentrado
+    A0=np.fft.fftshift(A0_unshifted)                # Se centra el espectro angular 
+    A_shifted=np.multiply(A0,H0)                    # Se obtiene el espectro angular en z 
+    A_unshifted=np.fft.fftshift(A_shifted)          # Se descentran las freq. para usar ift
+    U=inverse_dft2d(np.fft.fftshift(A_unshifted))   # Se calcula el campo propagado U a una distancia z
 
-    A=np.multiply(A0,H0)
-
-    U=inverse_dft2d(np.fft.fftshift(A))   #*(deltafx**2)        #U se devuelve centrada
-
-    if z<N*deltax**2/lamb:
+    if z<N*deltax**2/lamb:                          # condición donde empieza a fallar espectro angular
         print(f'z es mayor que {N*deltax**2/lamb}')
-    Espectro=((np.abs(U))**2)
+    
+    Espectro=((np.abs(U))**2)                       # Se calcula el espectro o modulo cuadrado
+    
+    # SE REALIZAN LOS SIGUIENTES PLOTs. con titulos descriptivos
+    
     plt.imshow(np.angle(H0),cmap='gray')
     plt.title('FASE de función de transferencia')
     plt.show()
@@ -138,9 +156,9 @@ def main():
     plt.tight_layout()
     plt.show()
 
-
+    # VERIFICACIÓN DE ENERGÍA EN Z=0 Y EN Z=z
     print(np.sum(Espectro))
     print(np.sum(Z0**2))
 
-
+# Se llama la función que ejecuta el proceso de propagación numérica    
 main()

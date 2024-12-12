@@ -16,7 +16,7 @@ deltax = lamb * z / (N * deltax_0)
 print("Tamaño de ventana en la entrada:",N*deltax_0)
 print("Pixel en la salida",deltax_0)
 print("Tamaño de ventana en la salida",N*deltax)
-print( "Condición de límite de difracción discreta",N * deltax**2 / lamb)
+print( "Condición de límite de difracción discreta",N * deltax_0**2 / lamb)
 # Función t, mascara
 def U0(x, y):             
     return 0.5 * (1 + m * np.cos(2 * np.pi * x / L+0*y))

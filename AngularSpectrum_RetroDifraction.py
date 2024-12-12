@@ -4,10 +4,32 @@ import numpy as np
 import scipy.fftpack as fft
 import os
 
+# Función para agregar padding
+def add_padding(image, factor=4):
+    """Agrega padding para cuadruplicar el tamaño de la imagen en cada eje."""
+    original_shape = image.shape
+    padded_shape = (original_shape[0] * factor, original_shape[1] * factor)
+    padded_image = np.zeros(padded_shape, dtype=image.dtype)
+
+    start_row = (padded_shape[0] - original_shape[0]) // 2
+    start_col = (padded_shape[1] - original_shape[1]) // 2
+
+    padded_image[start_row:start_row + original_shape[0], start_col:start_col + original_shape[1]] = image
+
+    return padded_image
+
+# Función para remover padding
+def remove_padding(image, original_shape):
+    """Elimina el padding de una imagen para restaurar su tamaño original."""
+    padded_shape = image.shape
+
+    start_row = (padded_shape[0] - original_shape[0]) // 2
+    start_col = (padded_shape[1] - original_shape[1]) // 2
+
+    return image[start_row:start_row + original_shape[0], start_col:start_col + original_shape[1]]
+
 # Importar máscara para Z=0
-
-
-image = Image.open('D:/Dalej/Taller V/Difracci-n-escalar-discreta/Logo_OD.png').convert('L')  # Convertir a escala de grises
+image = Image.open('Intensity.png').convert('L')  # Convertir a escala de grises
 
 image2 = Image.open('Real.png').convert('L')  # Convertir a escala de grises
 image2 = np.array(image2, dtype=np.float64)
@@ -20,27 +42,30 @@ Campo = image2 + 1j * image3
 λ = 633e-9  # Longitud de onda en metros
 pixel = 3.45e-6  # Tamaño de píxel en metros
 
-#U0 = np.array(image, dtype=np.float64)  # Convertir imagen a float64 para mayor precisión
-U0 = np.array(Campo, dtype=np.complex128)  # Usar tipo complejo
+U0 = np.sqrt(np.array(image, dtype=np.float64))  # Convertir imagen a float64 para mayor precisión
+#U0 = np.array(Campo, dtype=np.complex128)  # Usar tipo complejo
 
+
+""""
+# Agregar padding
+original_shape = U0.shape
+U0_padded = add_padding(U0)
 
 # Crear carpeta para guardar las imágenes
 output_folder = "imagenes_propagadas"
 os.makedirs(output_folder, exist_ok=True)
 
+
 # Generar imágenes y guardarlas
-
-UZ_magnitude = np.abs(U0)**2
-
-U0= np.abs(U0)**2
+U0_magnitude = np.abs(U0_padded)**2
 
 output_path = os.path.join(output_folder, f"IntensityCalculated.png")
-plt.imsave(output_path, UZ_magnitude, cmap='gray')
+plt.imsave(output_path, U0_magnitude, cmap='gray')
 print(f"Imagen guardada: {output_path}")
 
 print(f"Imágenes generadas y guardadas en la carpeta: {output_folder}")
 
-
+"""
 
 
 def AngularSpectrum(U0, Z, λ, pixel):
@@ -84,10 +109,15 @@ num_images = get_int_input("Ingrese la cantidad de imágenes a generar: ")
 output_folder = "imagenes_propagadas"
 os.makedirs(output_folder, exist_ok=True)
 
+
+
 # Generar imágenes y guardarlas
 for i in range(num_images):
     Z = start_Z + i * step_Z
     UZ = AngularSpectrum(U0, Z, λ, pixel)
+
+    # Remover padding
+    
     UZ_magnitude = np.abs(UZ)**2
 
     output_path = os.path.join(output_folder, f"propagated_Z_{Z:.5f}m.png")

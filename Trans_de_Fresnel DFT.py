@@ -16,6 +16,26 @@ deltax_0 = 10E-6                         #paso en espacio
 deltax = lamb*z/(N*deltax_0)
 
 
+# Función DFT bidimensional
+def dft2d(image):
+    # Creación de array en ceros de tipo complejo para la DFT.
+    dft2D = np.zeros((M, N), dtype=complex)         
+    
+    x1 = np.arange(M)       # Listas del 0,...,1023
+    y1 = np.arange(N)        
+
+    # Matrices con la base o kernel de Fourier
+    Kernel_x = np.exp(-2j * np.pi * np.outer(x1, x1) / M) #base  en x 
+    Kernel_y = np.exp(-2j * np.pi * np.outer(y1, y1) / N) # base en y  
+    
+    # aplicación de transformada unidimensional
+    dft_x = np.dot(Kernel_x, image)
+    # aplicación de transfomada bidimensional
+    dft2D = np.dot(dft_x, Kernel_y)
+
+    return dft2D
+
+
 
 #Fase parabolica en el plano Z=0
 def Fase2(x_0,y_0):
@@ -49,7 +69,7 @@ def main():
 
     U1=U_1(X_0,Y_0)                     #Evaluar  U_1 en corrdenadas del plano z=0
 
-    F0=np.fft.fftshift(np.fft.fft2(U1))     #Se le aplica la transformada de Fourier y se centran las frecuencias
+    F0=np.fft.fftshift(dft2d(U1))     #Se le aplica la transformada de Fourier y se centran las frecuencias
     F1=np.multiply(F0,ConstantPhase(X,Y))   #Se multiplica punto  a punto la transformada de Fourier y la fase que res constante respecto a
 
 

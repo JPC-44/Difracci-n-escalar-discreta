@@ -59,7 +59,7 @@ def main():
 
     end_time = time.perf_counter()
     elapsed_time = end_time - start_time
-    print(f"Tiempo transcurrido: {elapsed_time:.8f} segundos")
+    print(f"Tiempo transcurrido espectro angular con FFT: {elapsed_time:.8f} segundos")
 
     if z<N*deltax**2/lamb:                              # condición donde empieza a fallar espectro angular
         print(f'z es mayor que {N*deltax**2/lamb}')
@@ -79,13 +79,16 @@ def main():
     plt.subplot(1, 2, 2)
     plt.imshow(Espectro, extent=(min(x), max(x), min(x), max(x)),origin='upper', cmap='gray')
     plt.colorbar()
-    plt.title(f'Módulo cuadrado de campo propagado z0={z} metros.')
+    plt.title(f'Módulo cuadrado de campo propagado z={z} metros.')
     plt.xlabel('x[m]')
     plt.ylabel('y[m]')
 
     plt.tight_layout()
     plt.show()
 
+    # VERIFICACIÓN DE ENERGÍA EN Z=0 Y EN Z=z
+    #print(np.sum(Espectro))
+    #print(np.sum(Z0**2))
 
 # Se llama la función que ejecuta el proceso de propagación numérica    
 main()

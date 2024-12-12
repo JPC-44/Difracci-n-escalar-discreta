@@ -1,18 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import time
+from PIL import Image
+
+image = Image.open('Logo_OD.png').convert('L')  # Convertir a escala de grises
+Z0 = np.sqrt(np.array(image, dtype=np.float64))
 
 
-z=10E-2                 # Distancia entre planos
+z=0.15                 # Distancia entre planos
 lamb=650E-9             # Longitud de onda que se propaga
-N=1024                  # Muestras en x
-M=N                     #m Muestas en y
+M, N = Z0.shape
 deltax=10E-6            # Paso en x
 deltay=deltax           # Paso en y
 deltafx=1/(N*deltax)    # Paso fx
 deltafy=deltafx         # Paso fy
-R=0.2E-3                # Radio de la apertura circular
-b=0.08E-3               # Ancho de la apertura de Young
-a=0*R                   # Desplazamiento de la máscara circular
 
 
 
@@ -82,16 +83,6 @@ def shift2D(A):
         SI.append(B)
     return SI
 
-# Función circular desplazada un valor 'a' en el plano, con radio R
-def U01(x, y):      
-    return np.where(( np.sqrt((x-a)**2+(y-a)**2) < R) ,1, 0)       
-# Apertura rectangular deltada con ancho 2b (YOUNG)
-def U0(x, y):        
-    return np.where((( np.abs(x) < b ) & ( np.abs(0.001*y) < b )), 1, 0) 
-
-# Apertura cuadrada de lado 2R
-def U02(x, y):        
-    return np.where((( np.abs(x)< R ) & ( np.abs(y) < R )), 1, 0) 
 
 # Función circ para filtrado de las frecuencias no propagantes de H(fx,fy)
 def circ(X,Y):
@@ -106,6 +97,11 @@ def H(fx,fy):
 
 # Función main donde se ejecuta en meshgrid y las operaciones para propagar espectro angular
 def main():
+    # Marca de tiempo inicial
+    start_time = time.perf_counter()
+    print("Inicio del proceso...")
+
+
     #LINSPACE EN ESPACIO 
     x=np.arange(-N//2,N//2)
     y=np.arange(-N//2,N//2)
@@ -118,8 +114,7 @@ def main():
     fx,fy=fx*deltafx,fy*deltafx
     Fx,Fy=np.meshgrid(fx,fy)
 
-    # Función máscara evaluada en el meshgrid
-    Z0=U0(X,Y) 
+
     #Funcion de transferencia evaluada en el meshgrid
     H0=H(Fx,Fy)
     A0_unshifted=dft2d(Z0)                          # Espectro angular en z=0 descentrado
@@ -128,6 +123,11 @@ def main():
     A_unshifted=np.fft.fftshift(A_shifted)          # Se descentran las freq. para usar ift
     U=inverse_dft2d(np.fft.fftshift(A_unshifted))   # Se calcula el campo propagado U a una distancia z
 
+    end_time = time.perf_counter()
+    elapsed_time = end_time - start_time
+    print(f"Tiempo transcurrido espectro angular con DFT: {elapsed_time:.8f} segundos")
+
+
     if z<N*deltax**2/lamb:                          # condición donde empieza a fallar espectro angular
         print(f'z es mayor que {N*deltax**2/lamb}')
     
@@ -135,9 +135,6 @@ def main():
     
     # SE REALIZAN LOS SIGUIENTES PLOTs. con titulos descriptivos
     
-    plt.imshow(np.angle(H0),cmap='gray')
-    plt.title('FASE de función de transferencia')
-    plt.show()
     plt.figure(figsize=(12, 6))
     plt.subplot(1, 2, 1)
     plt.imshow(Z0, extent=(min(x), max(x), min(y), max(y)), origin='upper', cmap='gray')
@@ -147,9 +144,9 @@ def main():
     plt.ylabel('y0')
 
     plt.subplot(1, 2, 2)
-    plt.imshow(Espectro, extent=(min(x), max(x), min(x), max(x)),origin='upper', cmap='gray',vmax=0.05)
+    plt.imshow(Espectro, extent=(min(x), max(x), min(x), max(x)),origin='upper', cmap='gray')
     plt.colorbar()
-    plt.title(f'Campo propagado z0={z} metros.')
+    plt.title(f'Campo propagado z={z} metros.')
     plt.xlabel('x')
     plt.ylabel('y')
 
@@ -157,8 +154,8 @@ def main():
     plt.show()
 
     # VERIFICACIÓN DE ENERGÍA EN Z=0 Y EN Z=z
-    print(np.sum(Espectro))
-    print(np.sum(Z0**2))
+    #print(np.sum(Espectro))
+    #print(np.sum(Z0**2))
 
 # Se llama la función que ejecuta el proceso de propagación numérica    
 main()

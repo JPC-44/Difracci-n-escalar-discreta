@@ -1,14 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-m=1            
-L=4E-4
-#z=10E-2                         #distancia entre planos
-lamb=500E-6                     #longitud de onda que se propaga
+import numpy as np
+import matplotlib.pyplot as plt
+
+m=0.5            
+L=100E-4
+z=10E-2                         #distancia entre planos
+lamb=633E-6                     #longitud de onda que se propaga
 k=2*np.pi/lamb
 N=1024                          #  Muestras      NOTA: tomar muestras proporcionales a C, para que el pixel se tome bien en la matriz C=1/deltax
-deltax_0 = 5E-6                 #paso en espacio
-z=N*(L**2)/lamb
+deltax_0 = 100E-6                 #paso en espacio
+#z=N*(L**2)/lamb
 deltax = lamb*z/(N*deltax_0)
 dimensionesImagen=N*deltax
 dimensionesImagenPropagada=N*deltax_0
@@ -17,14 +20,17 @@ print("Dimensiones de la imagen en:",dimensionesImagen)
 print("Dimensiones imagen en z:",dimensionesImagenPropagada)
 
 
+
+
+
         # Máscara sinusoidal
-def U0(x, y):
-    return (1+m*np.cos(2*np.pi*x/L+0*y))   
+def U0(x,y):
+    return 0.5*( 1 + m*np.cos(2*np.pi*x/L+0*y))   
 
 def Campo_Optico_analitico(x,y,z):
-    faseLineal=np.exp(1j*2*np.pi/lamb)
-    faseCalculada=np.exp(1j*np.pi*lamb*z/(L**2))
-    campoOptico=( 1  +  m*np.cos(2*np.pi*x/L+0*y))*faseCalculada*faseLineal/(2j*lamb*z)
+
+    faseCalculada=np.exp(-1j*np.pi*lamb*z/(L**2))
+    campoOptico=(1/2)*( 1  + faseCalculada*m*np.cos(2*np.pi*x/L+0*y))
     return campoOptico
 
 #Fase parabolica en el plano Z=0
@@ -37,7 +43,7 @@ def ConstantPhase(x,y):
 
 # Producto entre fase parabólica por el la transmitancia en z=0
 def U_1(x_0,y_0):
-    Product=Fase2(x_0,y_0) * U0(x_0,y_0)
+    Product=Fase2(x_0,y_0)*U0(x_0,y_0)
     return Product
 
 def main():
@@ -59,37 +65,49 @@ def main():
     
 
     Campo=Campo_Optico_analitico(X,Y,z)
-
-
-
+    intCampoAnalitico=(np.abs(Campo))**2
+    intCampoCompu=(np.abs(F1))**2
+    intCampoEntrada=(np.abs(U1))**2
     ##'''Creación de figura, plano z=0 y plano difractado'''
-
-
+    intCampoCompu=intCampoCompu/np.max(intCampoCompu)
+    print(np.max(intCampoCompu))
     plt.figure(figsize=(12, 6))
     plt.subplot(2, 2, 1)
     plt.title('Distribución de energía en el plano de entrada')
-    plt.imshow((np.abs(U1))**2, extent=(min(x_0), max(x_0), min(y_0), max(y_0)), origin='upper', cmap='gray')
+    plt.imshow(intCampoEntrada, extent=(min(x_0), max(x_0), min(y_0), max(y_0)), origin='upper', cmap='gray')
     plt.colorbar()
     plt.title('Distribución de energía en el plano de entrada')
     plt.xlabel('x0')
     plt.ylabel('y0')
 
     plt.subplot(2, 2, 2)
-    plt.imshow((((np.abs(F1)))**2), extent=(min(x), max(x), min(x), max(x)), origin='upper', cmap='gray')
+    plt.imshow(intCampoCompu, extent=(min(x), max(x), min(x), max(x)), origin='upper', cmap='gray',vmax=0.1)
     plt.colorbar()
     plt.title(f'Distribución de energía en el plano z0={z} m.')
     plt.xlabel('x')
     plt.ylabel('y')
 
     plt.subplot(2, 2, 3)
-    plt.imshow((np.abs(Campo))**2, extent=(min(x), max(x), min(x), max(x)), origin='upper', cmap='gray')
+    plt.imshow(intCampoAnalitico, extent=(min(x), max(x), min(x), max(x)), origin='upper', cmap='gray')
     plt.colorbar()
     plt.title(f'Distribución de energía en el plano z0={z} m. Cálculo análitico')
     plt.xlabel('x')
     plt.ylabel('y')
 
 
-    plt.tight_layout()
+
+    term1 = 1
+    term2 = m**2 * np.cos(2 * np.pi * x / L)**2
+    term3 = m * np.cos(2 * np.pi * x / L) * np.cos(np.pi * lamb * z / L**2)
+    intensidad = (1/4) * (term1 + term2 + term3)
+
+    # plot 1d
+    plt.figure(figsize=(8, 4))
+    plt.plot(x, intensidad,label='')
+    plt.title("Intensidad del Campo Difractado")
+    plt.xlabel(r"$x$")
+    plt.ylabel(r"")
+    plt.grid()
     plt.show()
     return 0
 
@@ -99,7 +117,7 @@ else:
     main()
     print(f'z es mayor que {N*deltax**2/lamb}')
 
-print(2048*((3.45E-6)**2)/(633E-9))
+
 
 z=N*L**2/lamb
 

@@ -2,10 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-z=10E-2                 # Distancia entre planos
+z=20E-2                 # Distancia entre planos
 lamb=650E-9             # Longitud de onda que se propaga
 N=1024                  # Muestras 
-deltax=10E-6            # Paso en x
+deltax=8E-6            # Paso en x
 deltay=deltax           # Paso en y
 deltafx=1/(N*deltax)    # Paso fx
 deltafy=deltafx         # Paso fy
@@ -18,12 +18,12 @@ def U01(x, y):
     return np.where((np.sqrt((x-a)**2+(y-a)**2) < R) , 1, 0)       
 
 # Apertura rectangular deltada con ancho 2b (YOUNG)
-def U0(x, y):              
+def U01(x, y):              
     return np.where(((np.abs(x)<b) & (np.abs(0.001*y)<b)),1, 0)
 
 # Apertura cuadrada de lado 2R
-def U02(x, y):             
-    return np.where( ((np.abs(x)<R) & (np.abs(y)<R)), 1, 0) 
+def U0(x, y):             
+    return np.where( ((np.abs(x-4*R)<R) & (np.abs(y-4*R)<R)), 1, 0) 
 
 # Función circ para filtrado de las frecuencias no propagantes de H(fx,fy)
 def circ(X,Y):             
@@ -64,7 +64,8 @@ def main():
     if z<N*deltax**2/lamb:                              # condición donde empieza a fallar espectro angular
         print(f'z es mayor que {N*deltax**2/lamb}')
     Espectro=((np.abs(U))**2)                           # Se calcula el espectro o modulo cuadrado
-    
+    plt.imshow(np.angle(U),cmap='gray')
+    plt.show()
     # SE REALIZAN LOS SIGUIENTES PLOTs. con titulos descriptivos
 
     plt.imshow(np.angle(H0),cmap='gray')
@@ -79,7 +80,7 @@ def main():
     plt.ylabel('y0[m]')
 
     plt.subplot(1, 2, 2)
-    plt.imshow(Espectro, extent=(min(x), max(x), min(x), max(x)),origin='upper', cmap='gray',vmax=0.05)
+    plt.imshow(Espectro, extent=(min(x), max(x), min(x), max(x)),origin='upper', cmap='gray',vmax=0.001)
     plt.colorbar()
     plt.title(f'Módulo cuadrado de campo propagado z0={z} metros.')
     plt.xlabel('x[m]')

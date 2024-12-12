@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-z=1E-2                 # Distancia entre planos
+z=10E-2                 # Distancia entre planos
 lamb=650E-9             # Longitud de onda que se propaga
 N=1024                  # Muestras 
 deltax=10E-6            # Paso en x

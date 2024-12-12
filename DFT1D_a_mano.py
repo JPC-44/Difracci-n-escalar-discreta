@@ -26,8 +26,8 @@ def f(E):                                     # función a la cual se le quiere 
 #   return np.sin(2*np.pi*100*E)
 
 N=100                     #  Muestras=datos  
-C=10             #           #ancho de espacio frecuencial (0,C)=(0,N*deltafx)   de donde a donde van las frecuencias C=N*deltafx  
-deltax=1/C                         #paso en espacio
+C=100             #           #ancho de espacio frecuencial (0,C)=(0,N*deltafx)   de donde a donde van las frecuencias C=N*deltafx  
+deltax=2/C                         #paso en espacio
 deltafx=C/N                    # paso en espacio frecuencias
 
 def A0(k):                  #ESPECTRO ANGULAR EN z=0
@@ -54,9 +54,9 @@ for k in range(0,N):      #lista de frecuencias
 print(len(freq),len(freqshift),len(DFT),len(DFTshift))
 
 
-plt.subplot(1,2,1)
+plt.subplot(1,2,1) 
 plt.plot(freqshift,abs(DFTshift))
-plt.xlabel('Frequency')
+plt.xlabel('f_x')
 plt.ylabel('|DFT| centrada')
 
 DFTns=[]    #para graficar la abs(DFT) no centrada
@@ -64,20 +64,21 @@ for i in range(0,N):
    DFTns.append(abs(DFT[i]))
 
 
-plt.subplot(2,2,2)
+plt.subplot(1,2,2)
 plt.plot(freq,DFTns)
-plt.xlabel('Frequency')
+plt.xlabel('f_x')
 plt.ylabel('|DFT| no centrada')
-
-plt.subplot(2,2,3)
+plt.show()
+"""
+plt.subplot(1,2,3)
 plt.plot(freqshift,np.real(DFTshift))
 plt.xlabel('Frequency')
 plt.ylabel('real(DFT) centrada')
 
-plt.subplot(2,2,4)
+plt.subplot(1,2,4)
 plt.plot(freqshift,np.imag(DFTshift))
 plt.xlabel('Frequency')
 plt.ylabel('im(DFT) centrada')
 plt.show()
-
+ """
 

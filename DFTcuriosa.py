@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 def dft2d_optimized(image):
-
+ 
     M, N = image.shape # tamaño de la imagne a la que se le implementa la DFT
 
     dft_result = np.zeros((M, N), dtype=complex)          # creación de array en ceros de tipo complejo para la DFT

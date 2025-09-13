@@ -7,39 +7,36 @@ import os
 # Importar máscara para Z=0
 
 
-image = Image.open('D:/Dalej/Taller V/Difracci-n-escalar-discreta/Logo_OD.png').convert('L')  # Convertir a escala de grises
+#image = Image.open("C:/Users/Usuario/Desktop/LogoODP_propagado/image_4.tif").convert('L')  # Convertir a escala de grises
 
-image2 = Image.open('Real.png').convert('L')  # Convertir a escala de grises
+image2= Image.open("C:/Users/Usuario/Desktop/GitHub/Python-Programs/DMD/images_to_display/transmitancia9/image_stack.tif").convert('L')  # Convertir a escala de grises
 image2 = np.array(image2, dtype=np.float64)
 
-image3 = Image.open('Imag.png').convert('L')  # Convertir a escala de grises
-image3 = np.array(image3, dtype=np.float64)
+try:
+    image3 = Image.open('Imag.png').convert('L')  # Convertir a escala de grises
+    image3 = np.array(image3, dtype=np.float64)
+except FileNotFoundError:
+    print("No se encontró 'Imag.png'. Usando matriz de ceros para la parte imaginaria.")
+    image3 = np.zeros_like(image2, dtype=np.float64)    
 
 Campo = image2 + 1j * image3
 
 λ = 633e-9  # Longitud de onda en metros
-pixel = 3.45e-6  # Tamaño de píxel en metros
+pixel = 5.2E-6  # Tamaño de píxel en metros
 
 #U0 = np.array(image, dtype=np.float64)  # Convertir imagen a float64 para mayor precisión
-U0 = np.array(Campo, dtype=np.complex128)  # Usar tipo complejo
-
+#U0 = np.array(Campo, dtype=np.complex128)  # Usar tipo complejo
+U0 = np.array(np.uint8(Campo))
 
 # Crear carpeta para guardar las imágenes
-output_folder = "imagenes_propagadas"
+output_folder = "retropropagacion/iteracion_1"
 os.makedirs(output_folder, exist_ok=True)
 
 # Generar imágenes y guardarlas
 
-UZ_magnitude = (np.abs(U0))**2
+""" UZ_magnitude = (np.abs(U0))**2
 
-U0= np.abs(U0)**2
-
-output_path = os.path.join(output_folder, f"IntensityCalculated.png")
-plt.imsave(output_path, UZ_magnitude, cmap='gray')
-print(f"Imagen guardada: {output_path}")
-
-print(f"Imágenes generadas y guardadas en la carpeta: {output_folder}")
-
+U0= np.abs(U0)**2 """
 
 
 
@@ -78,11 +75,15 @@ def get_int_input(prompt):
 # Parámetros ajustables
 start_Z = get_float_input("Ingrese el valor inicial de Z (en metros): ")
 step_Z = get_float_input("Ingrese el paso entre valores de Z (en metros): ")
-num_images = get_int_input("Ingrese la cantidad de imágenes a generar: ")
+stop_Z = get_float_input("Ingrese el valor final de Z (en metros): ")
+
+num_images = int((stop_Z - start_Z) / step_Z) + 1
+
+print(f"Se generarán {num_images} imágenes.")
 
 # Crear carpeta para guardar las imágenes
-output_folder = "imagenes_propagadas"
-os.makedirs(output_folder, exist_ok=True)
+
+
 
 # Generar imágenes y guardarlas
 for i in range(num_images):

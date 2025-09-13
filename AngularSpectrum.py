@@ -2,18 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from PIL import Image
+import cv2
 
-image = Image.open('Logo_OD.png').convert('L')  # Convertir a escala de grises
-Z0 = np.sqrt(np.array(image, dtype=np.float64))
-
-
-z=0.15                 # Distancia entre planos
-lamb=650E-9             # Longitud de onda que se propaga
-M, N = Z0.shape
-deltax=10E-6            # Paso en x
-deltay=deltax           # Paso en y
-deltafx=1/(N*deltax)    # Paso fx
-deltafy=deltafx         # Paso fy
 
 
 # Función circ para filtrado de las frecuencias no propagantes de H(fx,fy)
@@ -28,23 +18,23 @@ def H(fx,fy):
 
 
 # Función main donde se ejecuta en meshgrid y las operaciones para propagar espectro angular
-def main():
+def main(z):
 
     # Marca de tiempo inicial
     start_time = time.perf_counter()
     print("Inicio del proceso...")
 
     #LINSPACE EN ESPACIO 
-    x=np.arange(-N//2,N//2)
-    y=np.arange(-N//2,N//2)
-    x,y=x*deltax,y*deltax
-    X,Y=np.meshgrid(x,y)
+    x = np.arange(-N//2,N//2)
+    y = np.arange(-M//2,M//2)
+    x,y = x*deltax, y*deltax
+    X,Y = np.meshgrid(x,y)
 
     #LINSPACE EN ESPACIO DE FRECUENCIAS
-    fx=np.arange(-N//2,N//2)
-    fy=np.arange(-N//2,N//2)        
-    fx,fy=fx*deltafx,fy*deltafx
-    Fx,Fy=np.meshgrid(fx,fy)
+    fx = np.arange(-N//2,N//2)
+    fy = np.arange(-M//2,M//2)        
+    fx,fy = fx*deltafx,fy*deltafx
+    Fx,Fy = np.meshgrid(fx,fy)
 
 
     #Funcion de transferencia evaluada en el meshgrid
@@ -56,7 +46,7 @@ def main():
     A_shifted=np.multiply(A0,H0)            # Se obtiene el espectro angular en z 
     A_unshifted=np.fft.fftshift(A_shifted)  # Se descentran las freq. para usar ift
     U=np.fft.ifft2(A_unshifted)             # Se calcula el campo propagado U a una distancia z
-
+    
     end_time = time.perf_counter()
     elapsed_time = end_time - start_time
     print(f"Tiempo transcurrido espectro angular con FFT: {elapsed_time:.8f} segundos")
@@ -66,17 +56,16 @@ def main():
     Espectro=((np.abs(U))**2)                           # Se calcula el espectro o modulo cuadrado
     
     # SE REALIZAN LOS SIGUIENTES PLOTs. con titulos descriptivos
-
     
-    plt.figure(figsize=(12, 6))
-    plt.subplot(1, 2, 1)
-    plt.imshow(Z0**2, extent=(min(x), max(x), min(y), max(y)), origin='upper', cmap='gray')
-    plt.colorbar()
-    plt.title('Módulo cuadrado en z=0')
-    plt.xlabel('x0[m]')
-    plt.ylabel('y0[m]')
+    # plt.figure(figsize=(12, 6))
+    # plt.subplot(1, 2, 1)
+    # plt.imshow(Z0**2, extent=(min(x), max(x), min(y), max(y)), origin='upper', cmap='gray')
+    # plt.colorbar()
+    # plt.title('Módulo cuadrado en z=0')
+    # plt.xlabel('x0[m]')
+    # plt.ylabel('y0[m]')
 
-    plt.subplot(1, 2, 2)
+    #plt.subplot(1, 2, 2)
     plt.imshow(Espectro, extent=(min(x), max(x), min(x), max(x)),origin='upper', cmap='gray')
     plt.colorbar()
     plt.title(f'Módulo cuadrado de campo propagado z={z} metros.')
@@ -85,10 +74,28 @@ def main():
 
     plt.tight_layout()
     plt.show()
+    return Espectro
 
     # VERIFICACIÓN DE ENERGÍA EN Z=0 Y EN Z=z
     #print(np.sum(Espectro))
     #print(np.sum(Z0**2))
 
 # Se llama la función que ejecuta el proceso de propagación numérica    
-main()
+image = Image.open('C:/Users/Usuario/Desktop/GitHub/Difracci-n-escalar-discreta/obstaculo.png').convert('L')  # Convertir a escala de grises
+Z0 = np.sqrt(np.array(image, dtype=np.float64))
+
+#z = 0.3                # Distancia entre planos
+lamb = 633E-9             # Longitud de onda que se propaga
+M, N = Z0.shape
+deltax = 75E-6            # Paso en x
+deltay = deltax           # Paso en y
+deltafx = 1/(N*deltax)    # Paso fx
+deltafy = deltafx         # Paso fy
+
+print(f'Tamaño de la imagen: {N*deltax*1000, M*deltay*1000} mm')
+
+for i in range(0,20):
+    z = 0.02*i
+    propagacion = main(z)
+    cv2.imwrite(f'C:/Users/Usuario/Desktop/GitHub/Difracci-n-escalar-discreta/Obstaculo/propagacion_z={z:.2f}m.png', np.uint8(255*propagacion/np.max(propagacion)))
+    print(f'Imagen guardada: propagacion_z={z:.2f}m.png')

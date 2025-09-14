@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 z=10E-2                 # Distancia entre planos
 lamb=650E-9             # Longitud de onda que se propaga
 N=1024                  # Muestras 
@@ -11,12 +10,9 @@ deltafx=1/(N*deltax)    # Paso fx
 deltafy=deltafx         # Paso fy
 m=1            
 L=2E-3
-
-
     
 def U0(x, y):              
     return 0.5*(1+m*np.cos(2*np.pi*x/L+0*y))
-
 
 
 # Función circ para filtrado de las frecuencias no propagantes de H(fx,fy)

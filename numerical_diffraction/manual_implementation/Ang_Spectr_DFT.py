@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 import time
 from PIL import Image
 
+
+
+
 image = Image.open('Logo_OD.png').convert('L')  # Convertir a escala de grises
 Z0 = np.sqrt(np.array(image, dtype=np.float64))
 

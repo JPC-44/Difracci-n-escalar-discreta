@@ -21,8 +21,6 @@ else:
 
 
 
-
-
 def shift(arr):                                  #shift de la DFT
         N = len(arr)
         mid = N // 2   #división que toma el valor por debajo // 

@@ -29,6 +29,7 @@ def shift2D(A):
             B.append(SS[p][q])
         SI.append(B)
     return SI
+
 def base(X,Y,Z,T,N):                                    #base posición X=x, frecuencia deltafx=Y
    return np.exp(-2*np.pi*1j*(X*Y+Z*T)/N)     
                                                   # para obtener la parte real: Function.real

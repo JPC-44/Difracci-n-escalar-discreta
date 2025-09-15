@@ -76,41 +76,51 @@ def AngularSpectrum(U0, z: float, λ: float, pixel_size: float, retropropagation
     return optical_field_at_plane_z
 
 """computation of Fresnel transformation method"""
-def Fresnel_transformation(U0, z: float, λ: float, pixel_size: float):
+def Fresnel_transformation(U0, z: float, λ: float, input_pixel_size: float):
+    """
+    U0: complex array to propagate
+    z: distance to propagate in meters
+    λ: wavelenght of the optical wave field
+    input_pixel_size: is the size of the pixel in the plane z=0
+    """
     M, N = U0.shape
-
+    output_pixel_size = λ * z /(N * input_pixel_size)
     k = 2 * np.pi / λ  # wave number
-    # espacio z=z
-    x = np.arange(-N//2,N//2)
-    y = np.arange(-M//2,M//2)
-    x,y = x*pixel_size, y*pixel_size
-    X,Y = np.meshgrid(x,y)
 
-    #Darle dimensiones al plano z=0
+    # Dimensiones en plano z=0
     x_0 = np.arange(-N//2,N//2)
     y_0 = np.arange(-N//2,N//2)       
-    x_0,y_0=x_0*pixel_size,y_0*pixel_size   
-    X_0,Y_0=np.meshgrid(x_0,y_0)
-    # paso en frecuencia espacial
-    delta_fx = λ * z / (N * pixel_size)
-    delta_fy = λ * z / (M * pixel_size)
+    x_0,y_0 = x_0*input_pixel_size, y_0*input_pixel_size   
+    X_0,Y_0 = np.meshgrid(x_0,y_0)
 
-    # producto entre fase parabólica por el la transmitancia en z=0
-    product = (pixel_size**2)*np.exp((1j*k/(2*z))*(x_0**2+y_0**2))*U0
+    # dimensiones en plano z=z
+    x = np.arange(-N//2,N//2)
+    y = np.arange(-M//2,M//2)
+    x,y = x*output_pixel_size, y*output_pixel_size
+    X,Y = np.meshgrid(x,y)
+
+
+    # producto entre fase parabólica y la transmitancia en z=0
+    parabolic_phase = (np.exp((1j*k/(2*z))*(X_0**2 + Y_0**2))) * (input_pixel_size**2)
+    constant_phase_output_plane = (np.exp(1j*k*z))*(np.exp((1j*k/(2*z))*(X**2+Y**2)))/(1j*λ*z)
+
+    product = parabolic_phase * U0
 
     fourier_transform_of_product = np.fft.fftshift(np.fft.fft2(product))
-    constant_phase = (np.exp(1j*k*z))*(np.exp((1j*k/(2*z))*(x**2+y**2)))/(1j*λ*z)
     
-    optical_wave_field = np.multiply(fourier_transform_of_product, constant_phase)
+    optical_wave_field = np.multiply(fourier_transform_of_product, constant_phase_output_plane)
 
-    if z<N*pixel_size**2/λ:
-        print(f'z es menor que {N*pixel_size**2/λ}')
+    if z<N*input_pixel_size**2/λ:
+        print(f'z es menor que {N*input_pixel_size**2/λ}')
         print("Se recomienda usar el método de espectro angular para esta distancia.")
     else:
-        print(f'z es mayor que {N*pixel_size**2/λ}')
+        print(f'z es mayor que {N*input_pixel_size**2/λ}')
         print("Método de Fresnel aplicado correctamente.")
     
-    return optical_wave_field
+    array_coordenadas = [x_0, y_0, x, y]
+
+
+    return optical_wave_field, array_coordenadas
 
 """computation of the Fresnel convolution method"""
 def Fresnel_convolution(U0, z: float, λ: float, pixel_size: float, retropropagation = False):
@@ -227,6 +237,11 @@ def slice_images(imagenes, labels=None):
     slider.on_changed(update)
     plt.show()
 
+
+"""
+Guardar imagenes dado un array de imágenes,
+el label para nombrar la imágen y el path
+"""
 def guardar_imagenes(stack, label, path):
     for i in range(0,len(stack)):
 

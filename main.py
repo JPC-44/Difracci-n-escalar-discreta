@@ -39,7 +39,7 @@ def main():
     create_optical_field = funcs.crear_campo(real_img, imag_img, intensity)
 
 
-    entrance_optical_field = np.array(create_optical_field)#, dtype=np.complex128)  # Usar tipo complejo
+    entrance_optical_field = np.array(create_optical_field)
     
     M, N = entrance_optical_field.shape
     print(f'Tamaño de la imagen: {N*pixel_size*1000, M*pixel_size*1000} mm')
@@ -72,7 +72,7 @@ def main():
         for i in range(0,num_images):
             z = start_z + i * step_z
 
-            optical_field_at_plane_z = funcs.Fresnel_transformation(entrance_optical_field, z, λ, pixel_size)
+            optical_field_at_plane_z, coords = funcs.Fresnel_transformation(entrance_optical_field, z, λ, pixel_size)
             intensity = np.abs(optical_field_at_plane_z)**2
             imagenes.append(intensity)
             labels_posiciones.append(f"{z:.5f}")

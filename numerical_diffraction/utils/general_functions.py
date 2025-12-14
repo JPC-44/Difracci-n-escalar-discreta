@@ -38,8 +38,13 @@ def Fresnel_transfer_function(x, y, z, λ, retropropagation: bool = False):
 
 """computation of the angular spectrum method"""
 def AngularSpectrum(U0, z: float, λ: float, pixel_size: float, retropropagation = False):
-
-
+    """
+    U0: complex array to propagate
+    z: distance to propagate [m]
+    λ: wavelenght[m] of the optical wave field
+    input_pixel_size [m]: is the size of the pixel in the plane z=0
+    retropropagation: defines if the method will go in z+ or z-
+    """
 
     # dimensiones del espacio de frecuencias
     M, N = U0.shape
@@ -50,23 +55,26 @@ def AngularSpectrum(U0, z: float, λ: float, pixel_size: float, retropropagation
 
     # espacio
     x = np.arange(-N//2,N//2)
-    y = np.arange(-M//2,M//2)
+    y = np.arange(-M//2, M//2)
     x,y = x*pixel_size, y*pixel_size
     X,Y = np.meshgrid(x,y)
 
     # espacio de frecuencias
     fx = np.fft.fftshift(np.fft.fftfreq(N, pixel_size))
     fy = np.fft.fftshift(np.fft.fftfreq(M, pixel_size))
+    #al evaluar en este meshgrid que está hecho con np.fftfreq salen las coordenadas centradas 
+    # dentro de la evaluación de una función. Por lo que al multiplica por una transformada
+    # de Fourier toca realizar un proceso de shifting primero al espectro para tener congruencia en los resultados
     Fx, Fy = np.meshgrid(fx, fy)
 
     # función de transferencia en espacio libre H(fx, fy, z)
     transfer_function = free_space_transfer_function(Fx, Fy, z, λ, retropropagation)
-
-    # Aplicar un filtro circular para evitar componentes evanescentes
-    circ_filter = np.sqrt(fx**2 + fy**2) <= 1 / λ
+    
+    # Aplicar un filtro circular para evitar componentes evanescentes --> poco importante debido a que nunca se llegará a esas frecuencias 10^9 m^-1
+    circ_filter = np.sqrt(Fx**2 + Fy**2) <= 1 / λ
 
     # filtering the transfer function
-    transfer_function *= circ_filter
+    transfer_function = transfer_function * circ_filter
 
     # calculating the optical field at distance Z
     initial_angular_spectrum = np.fft.fftshift(fft.fft2(U0))
@@ -76,14 +84,15 @@ def AngularSpectrum(U0, z: float, λ: float, pixel_size: float, retropropagation
     return optical_field_at_plane_z
 
 """computation of Fresnel transformation method"""
-def Fresnel_transformation(U0, z: float, λ: float, input_pixel_size: float):
+def Fresnel_transformation(U_0, z: float, λ: float, input_pixel_size: float):
+
     """
     U0: complex array to propagate
-    z: distance to propagate in meters
-    λ: wavelenght of the optical wave field
-    input_pixel_size: is the size of the pixel in the plane z=0
+    z: distance to propagate [m]
+    λ: wavelenght [m] of the optical wave field
+    input_pixel_size [m]: is the size of the pixel in the plane z=0
     """
-    M, N = U0.shape
+    M, N = U_0.shape
     output_pixel_size = λ * z /(N * input_pixel_size)
     k = 2 * np.pi / λ  # wave number
 
@@ -101,10 +110,10 @@ def Fresnel_transformation(U0, z: float, λ: float, input_pixel_size: float):
 
 
     # producto entre fase parabólica y la transmitancia en z=0
-    parabolic_phase = (np.exp((1j*k/(2*z))*(X_0**2 + Y_0**2))) * (input_pixel_size**2)
+    parabolic_phase_0 = (np.exp(    (1j*k/(2*z)) * (X_0**2 + Y_0**2))) * (input_pixel_size**2)
     constant_phase_output_plane = (np.exp(1j*k*z))*(np.exp((1j*k/(2*z))*(X**2+Y**2)))/(1j*λ*z)
 
-    product = parabolic_phase * U0
+    product = np.multiply(parabolic_phase_0, U_0)
 
     fourier_transform_of_product = np.fft.fftshift(np.fft.fft2(product))
     
